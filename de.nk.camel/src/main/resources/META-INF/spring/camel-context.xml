@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/spring"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<!-- Service-Bean-Definitionen -->
+	<context:component-scan base-package="de.nk.camel" />
+	<context:annotation-config />
+	<context:spring-configured />
+
+	<!-- let Camel use @Component scanned route builders -->
+	<camel:camelContext id="camelContextAutoScan">
+		<camel:contextScan />
+	</camel:camelContext>
+	
+	<!-- Camel Contexts via XML configured -->
+	<camel:camelContext id="camelContextXml">
+		<camel:route id="camelInOut">
+			<camel:from uri="aq:queue:CAMEL_IN" />
+			<camel:to uri="aq:queue:CAMEL_OUT" />
+		</camel:route>
+	</camel:camelContext>
+	
+	<bean id="connectionFactoryOracleAQ" class="oracle.jms.AQjmsFactory" factory-method="getQueueConnectionFactory">
+        <constructor-arg index="0" value="jdbc:oracle:thin:@localhost:1521:xe" />
+        <constructor-arg index="1" type="java.util.Properties" value="" />
+    </bean>
+	
+	<bean id="aqCredentials" class="org.springframework.jms.connection.UserCredentialsConnectionFactoryAdapter">
+        <property name="targetConnectionFactory" ref="connectionFactoryOracleAQ" />
+        <property name="username" value="system" />
+        <property name="password" value="system" />
+    </bean>
+    
+	<bean id="aq" class="org.apache.camel.component.jms.JmsComponent">
+		<property name="connectionFactory" ref="aqCredentials" />
+	</bean>
+	
+	<bean id="jpa" class="org.apache.camel.component.jpa.JpaComponent">
+        <property name="entityManagerFactory" ref="entityManagerFactory" />
+        <property name="transactionManager" ref="transactionManager" />
+    </bean>
+    
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalEntityManagerFactoryBean">
+    	<property name="persistenceUnitName" value="camel"/>
+	</bean>
+	
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory" />
+    </bean>
+    
+	<tx:annotation-driven />
+
+</beans>

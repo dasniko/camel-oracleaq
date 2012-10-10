@@ -1,0 +1,4 @@
+ID,MESSAGE,TARGET
+1,Erste Nachricht,DB
+2,Zweite Nachricht,JMS
+3,3. Nachricht,BOTH
