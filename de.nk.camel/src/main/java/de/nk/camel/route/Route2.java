@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import de.nk.camel.bean.DbPredicate;
 import de.nk.camel.bean.JmsPredicate;
+import de.nk.camel.bean.MyLogBean;
 
 /**
  * @author Niko Köbler, http://www.n-k.de
@@ -19,6 +20,8 @@ public class Route2 extends AbstractRoute {
 
         from("direct:camelRouter")
                 .log(body().toString())
+                .bean(MyLogBean.class, "log")
+                .to("bean:myLogBean?method=log")
                 .choice().when(db)
                     .to("direct:camelDb")
                 .when(jms)
